@@ -1,37 +1,60 @@
 <?php
 namespace App\Events;
 
+use App\Dto\BenchmarkResultDto;
 use Symfony\Component\EventDispatcher\Event;
 
 class SiteLoadingSpeedTestedEvent extends Event
 {
+    /** @var BenchmarkResultDto */
+    protected $baseSiteTestResult;
+
     /**
      * @var array
      */
-    protected $testResults = [];
+    protected $comparedSitesTestResults = [];
+
+    /**
+     * @var \DateTime
+     */
+    protected $benchmarkDate;
 
     /**
      * SiteLoadingSpeedTestedEvent constructor.
-     * @param array $testResults
+     * @param array $comparedSitesTestResults
+     * @param \DateTime $benchmarkDate
      */
-    public function __construct(array $testResults)
+    public function __construct(
+        BenchmarkResultDto $baseSiteTestResult,
+        array $comparedSitesTestResults,
+        \DateTime $benchmarkDate)
     {
-        $this->testResults = $testResults;
+        $this->baseSiteTestResult = $baseSiteTestResult;
+        $this->comparedSitesTestResults = $comparedSitesTestResults;
+        $this->benchmarkDate = $benchmarkDate;
+    }
+
+    /**
+     * @return BenchmarkResultDto
+     */
+    public function getBaseSiteTestResult(): BenchmarkResultDto
+    {
+        return $this->baseSiteTestResult;
     }
 
     /**
      * @return array
      */
-    public function getTestResults(): array
+    public function getComparedSitesTestResults(): array
     {
-        return $this->testResults;
+        return $this->comparedSitesTestResults;
     }
 
     /**
      * @return \DateTime|null
      */
-    public function getTestDate(): ?\DateTime
+    public function getBenchmarkDate(): ?\DateTime
     {
-        return $this->testDate;
+        return $this->benchmarkDate;
     }
 }

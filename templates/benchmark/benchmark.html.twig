@@ -1,0 +1,53 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Benchmark loading time for web pages{% endblock %}
+{% block stylesheets %}
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" >
+{% endblock %}
+
+{% block body %}
+<style>
+    .example-wrapper { margin: 1em auto; max-width: 1300px; width: 95%; font: 18px/1.5 sans-serif; text-align: center}
+    .example-wrapper code { background: #F5F5F5; padding: 2px 6px; }
+    .wrapper-content {margin: auto}
+    .base-site {font-size: 22px; background: #F5F5F5; padding: 15px; margin-top: 20px}
+</style>
+
+<div class="example-wrapper">
+    <div class="wrapper-content">
+        <h1>Enter adresses for base page and pages you want to compare to</h1>
+        <section>
+            {% for label, flashes in app.session.flashbag.all %}
+                {% for flash in flashes %}
+                    {% if ( label == 'success' ) %}
+                        <div class="alert alert-success alert-dismissible fade show">
+                            {{ flash }}
+                        </div>
+                    {% elseif ( label == 'error' ) %}
+                        <div class="alert alert-danger alert-dismissible fade show">
+                            {{ flash }}
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            {% endfor %}
+            <form action="{{ path('benchmark') }}" method="POST">
+                <input type="text" name="base_site" placeholder="Put base site url here" required>
+                <input type="text" name="compared_sites" placeholder="Site urls separated with | or ," required>
+                <input type="email" name="email" required>
+                <input type="submit" value="Run test">
+            </form>
+        </section>
+        <section>
+            {% set baseSite = results['base_site'] %}
+            <div class="base-site">Base site: {{ baseSite['url'] }} with loading time {{ baseSite['loading_time'] }} s</div>
+            <hr>
+            {% for comparedSite in results['compared_sites'] %}
+                <div>
+                    Site: {{ comparedSite['url'] }} with loading time <strong>{{ comparedSite['loading_time'] }}</strong> >>> Faster loading site is
+                    <em>{{ comparedSite['faster_site'].getSiteUrl() }}</em> by <strong>{{ comparedSite['how_much_faster'] }} s</strong>
+                </div>
+            {% endfor %}
+        </section>
+    </div>
+</div>
+{% endblock %}

@@ -7,33 +7,39 @@ class SiteUrlsDto
     /**
      * @var string
      */
-    protected $site1Url;
+    protected $baseSiteUrl;
 
     /**
-     * @var string
+     * @var array
      */
-    protected $site2Url;
+    protected $comparedSites;
 
     /**
      * SiteUrlsDto constructor.
-     * @param $site1Url
-     * @param $site2Url
+     * @param $baseSiteUrl
+     * @param array $comparedSites
      */
-    public function __construct($site1Url, $site2Url)
+    public function __construct(string $baseSiteUrl, array $comparedSites)
     {
-        $this->site1Url = $site1Url;
-        $this->site2Url = $site2Url;
+        $this->baseSiteUrl = $baseSiteUrl;
+        $this->comparedSites = $comparedSites;
+    }
+
+    /**
+     * @return string
+     */
+    public function getBaseSiteUrl(): string
+    {
+        return $this->baseSiteUrl;
     }
 
     /**
      * @return array
      */
-    public function getSiteUrls()
+    public function getComparedSitesUrls(): array
     {
-        return [
-            'site_1' => $this->site1Url,
-            'site_2' => $this->site2Url,
-        ];
+        return $this->comparedSites;
+
     }
 
 }

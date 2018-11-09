@@ -1,6 +1,3 @@
-index:
-    path: /
-    controller: App\Controller\BenchmarkController::index
 benchmark:
-    path: /benchmark
+    path: /
     controller: App\Controller\BenchmarkController::benchmark

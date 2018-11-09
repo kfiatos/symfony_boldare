@@ -5,4 +5,5 @@ namespace App\Events;
 class Events
 {
     public const SITE_LOADING_SPEED_TESTED_EVENT = 'SiteLoadingSpeedTestedEvent';
+    public const SITE_LOADING_SPEED_TESTED_SENT_NOTIFICATION_EMAIL_EVENT = 'SiteLoadingSpeedTestedSentNotficationEmailEvent';
 }

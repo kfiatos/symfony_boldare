@@ -2,12 +2,18 @@
 
 namespace App\Service;
 
+use App\Dto\BenchmarkFullResultsDto;
 use App\Dto\BenchmarkResultDto;
 use App\Dto\SiteUrlsDto;
 use App\Events\Events;
 use App\Events\SiteLoadingSpeedTestedEvent;
+use App\Events\SiteLoadingSpeedTestedSentNotificationEmailEvent;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
+/**
+ * Class Benchmark
+ * @package App\Service
+ */
 class Benchmark
 {
     /**
@@ -16,9 +22,19 @@ class Benchmark
     protected $eventDispatcher;
 
     /**
-     * @var array
+     * @var BenchmarkResultDto
      */
-    protected $benchmarkResults = [];
+    protected $baseSiteBenchmarkResult;
+
+    /**
+     * @var BenchmarkResultDto[]
+     */
+    protected $otherSitesBenchmarkResults = [];
+
+    /**
+     * @var \DateTime
+     */
+    protected $benchmarkDate;
 
     /**
      * Benchmark constructor.
@@ -31,22 +47,42 @@ class Benchmark
 
     /**
      * @param SiteUrlsDto $siteUrlsDto
+     * @param string $email
+     * @return void
      */
-    public function performSiteBenchmark(SiteUrlsDto $siteUrlsDto)
+    public function performSiteBenchmark(SiteUrlsDto $siteUrlsDto, string $email = ''): void
     {
         // Not perfect time of execution but close enough in this case
-        $benchmarkDate = new \DateTime('now');
-        foreach ($siteUrlsDto->getSiteUrls() as $siteUrl) {
-            $siteLoadingTime = $this->getWebsiteLoadingTime($siteUrl);
-            $benchmarkResult = new BenchmarkResultDto($siteUrl, $siteLoadingTime, $benchmarkDate);
-            $this->addBenchmarkResult($benchmarkResult);
-        }
+        $this->benchmarkDate = new \DateTime('now');
+        $siteLoadingTime = $this->getWebsiteLoadingTime($siteUrlsDto->getBaseSiteUrl());
+        $benchmarkResult = new BenchmarkResultDto($siteUrlsDto->getBaseSiteUrl(), $siteLoadingTime, $this->benchmarkDate);
+        $this->setBaseSiteBenchmarkResult($benchmarkResult);
 
-        $this->eventDispatcher->dispatch(
-            Events::SITE_LOADING_SPEED_TESTED_EVENT,
-            new SiteLoadingSpeedTestedEvent(
-                $this->getBenchmarkResults()
-            )
+        foreach ($siteUrlsDto->getComparedSitesUrls() as $siteUrl) {
+            $siteLoadingTime = $this->getWebsiteLoadingTime($siteUrl);
+            $benchmarkResult = new BenchmarkResultDto($siteUrl, $siteLoadingTime, $this->getBenchmarkDate());
+            $this->addOtherSiteBenchmarkResult($benchmarkResult);
+        }
+        $this->sortBenchmarkResultsByLoadingTime($this->otherSitesBenchmarkResults);
+
+        $shouldEmailNotificationBeSent = $this->shouldEmailNotificationBeSent(
+            $this->getBaseSiteBenchmarkResult(),
+            $this->getOtherSitesBenchmarkResults()
+        );
+
+        $shouldEmailNotificationBeSent !== false && $this->sendSiteLoadingSpeedTestedSentNotificationEmailEvent($email);
+        $this->sendSiteLoadingSpeedTestedEvent();
+    }
+
+    /**
+     * @return BenchmarkFullResultsDto
+     */
+    public function getData(): BenchmarkFullResultsDto
+    {
+        return new BenchmarkFullResultsDto(
+            $this->getBaseSiteBenchmarkResult(),
+            $this->getOtherSitesBenchmarkResults(),
+            $this->getBenchmarkDate()
         );
     }
 
@@ -70,32 +106,93 @@ class Benchmark
     /**
      * @param BenchmarkResultDto $result
      */
-    public function addBenchmarkResult(BenchmarkResultDto $result): void
+    protected function addOtherSiteBenchmarkResult(BenchmarkResultDto $result): void
     {
-        $this->benchmarkResults[] = $result;
+        $this->otherSitesBenchmarkResults[] = $result;
     }
 
     /**
-     * @return string
+     * @param BenchmarkResultDto $baseSiteBenchmarkResult
      */
-    public function getBenchmarkResultsForView(): string
+    protected function setBaseSiteBenchmarkResult(BenchmarkResultDto $baseSiteBenchmarkResult): void
     {
-        $result = '';
-        /** @var BenchmarkResultDto $benchmarkResult */
-        foreach ($this->benchmarkResults as $benchmarkResult) {
-            $requestLengthInSeconds = intval($benchmarkResult->getSiteLoadingTime());
-            $requestLengthMicro = $benchmarkResult->getSiteLoadingTime() - $requestLengthInSeconds;
-            $final = strftime('%T', mktime(0, 0, $requestLengthInSeconds)) . str_replace('0.', '.', sprintf('%.3f', $requestLengthMicro));
-            $result .= $final . '<br>';
+        $this->baseSiteBenchmarkResult = $baseSiteBenchmarkResult;
+    }
+
+    /**
+     * @return BenchmarkResultDto
+     */
+    public function getBaseSiteBenchmarkResult(): BenchmarkResultDto
+    {
+        return $this->baseSiteBenchmarkResult;
+    }
+
+    /**
+     * @return BenchmarkResultDto[]
+     */
+    public function getOtherSitesBenchmarkResults(): array
+    {
+        return $this->otherSitesBenchmarkResults;
+    }
+
+    /**
+     * @param array $benchmarkResults
+     */
+    protected function sortBenchmarkResultsByLoadingTime(array &$benchmarkResults) {
+        usort($benchmarkResults, function ($site1, $site2) {
+            /**@var BenchmarkResultDto $site1 */
+            /**@var BenchmarkResultDto $site2 */
+            return $site1->getSiteLoadingTime() > $site2->getSiteLoadingTime();
+        });
+
+    }
+
+    /**
+     * @return \DateTime
+     */
+    public function getBenchmarkDate(): \DateTime
+    {
+        return $this->benchmarkDate;
+    }
+
+    /**
+     * @param BenchmarkResultDto $baseSite
+     * @param BenchmarkResultDto[] $comparedSites
+     * @return bool
+     */
+    protected function shouldEmailNotificationBeSent($baseSite, $comparedSites): bool
+    {
+        $sendNotificationEmail = false;
+        foreach ($comparedSites as $comparedSite) {
+            if ($baseSite->getSiteLoadingTime() > $comparedSite->getSiteLoadingTime()) {
+                $sendNotificationEmail = true;
+            }
         }
-        return $result;
+        return $sendNotificationEmail;
     }
 
     /**
-     * @return array
+     * @param string $email
      */
-    public function getBenchmarkResults(): array
+    protected function sendSiteLoadingSpeedTestedSentNotificationEmailEvent(string $email): void
     {
-        return $this->benchmarkResults;
+        $this->eventDispatcher->dispatch(
+            Events::SITE_LOADING_SPEED_TESTED_SENT_NOTIFICATION_EMAIL_EVENT,
+            new SiteLoadingSpeedTestedSentNotificationEmailEvent(
+                $email
+            )
+        );
+    }
+
+    protected function sendSiteLoadingSpeedTestedEvent(): void
+    {
+        $this->eventDispatcher->dispatch(
+        Events::SITE_LOADING_SPEED_TESTED_EVENT,
+            new SiteLoadingSpeedTestedEvent(
+                $this->getBaseSiteBenchmarkResult(),
+                $this->getOtherSitesBenchmarkResults(),
+                $this->getBenchmarkDate()
+            )
+        );
     }
 }
