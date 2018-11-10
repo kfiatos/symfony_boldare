@@ -30,12 +30,16 @@ class BenchmarkController extends AbstractController
 
         $benchmarkedSitesDto = new SiteUrlsDto($baseSite, $comparedSites);
 
-        $benchmark->performSiteBenchmark($benchmarkedSitesDto, $notificationEmailAddress);
+        //Hardcoded for the sake of simplicity (can be loaded from for ex: authenticated user)
+        $mobileNumber = '123456789';
+
+        $benchmark->performSiteBenchmark($benchmarkedSitesDto);
+        $benchmark->sendNotificationsAfterBenchmarkWasDone($notificationEmailAddress, $mobileNumber);
+
         $benchmarkFormatter = new BenchmarkResultsTwigViewFormatter($benchmark->getData());
         $results = $benchmarkFormatter->prepareResults();
 
         return $this->render('benchmark/benchmark.html.twig', [
-            'controller_name' => 'BenchmarkController',
             'results' => $results
         ]);
     }

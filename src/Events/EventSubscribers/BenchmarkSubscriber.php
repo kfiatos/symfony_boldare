@@ -5,10 +5,11 @@ namespace App\Events\EventSubscribers;
 use App\Events\Events;
 use App\Events\SiteLoadingSpeedTestedEvent;
 use App\Events\SiteLoadingSpeedTestedSentNotificationEmailEvent;
+use App\Events\SiteLoadingSpeedTestedSentNotificationSmsEvent;
 use App\Helpers\BenchmarkDataFormatters\BenchmarkResultsTextFileFormatter;
 use App\Service\Interfaces\LogWriterInterface;
 use App\Service\Interfaces\MailerServiceInterface;
-use RuntimeException;
+use App\Service\Interfaces\SmsSenderInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
@@ -28,14 +29,24 @@ class BenchmarkSubscriber implements EventSubscriberInterface
     protected $mailer;
 
     /**
+     * @var SmsSenderInterface
+     */
+    protected $smsService;
+
+    /**
      * BenchmarkSubscriber constructor.
      * @param LogWriterInterface $logWriter
      * @param MailerServiceInterface $mailer
+     * @param SmsSenderInterface $smsService
      */
-    public function __construct(LogWriterInterface $logWriter, MailerServiceInterface $mailer)
-    {
+    public function __construct(
+        LogWriterInterface $logWriter,
+        MailerServiceInterface $mailer,
+        SmsSenderInterface $smsService
+    ) {
         $this->logWriter = $logWriter;
         $this->mailer = $mailer;
+        $this->smsService = $smsService;
     }
 
     public static function getSubscribedEvents()
@@ -49,6 +60,11 @@ class BenchmarkSubscriber implements EventSubscriberInterface
             Events::SITE_LOADING_SPEED_TESTED_SENT_NOTIFICATION_EMAIL_EVENT => [
                 [
                     'handleSendEmailNotificationAfterEvent'
+                ]
+            ],
+            Events::SITE_LOADING_SPEED_TESTED_SENT_NOTIFICATION_SMS_EVENT => [
+                [
+                    'handleSendSmsNotificationAfterEvent'
                 ]
             ]
         ];
@@ -81,5 +97,13 @@ class BenchmarkSubscriber implements EventSubscriberInterface
     public function handleSendEmailNotificationAfterEvent(SiteLoadingSpeedTestedSentNotificationEmailEvent $event)
     {
         $this->mailer->sendTo($event->getEmail());
+    }
+
+    /**
+     * @param SiteLoadingSpeedTestedSentNotificationSmsEvent $event
+     */
+    public function handleSendSmsNotificationAfterEvent(SiteLoadingSpeedTestedSentNotificationSmsEvent $event)
+    {
+        $this->smsService->sendSms($event->getMobileNumber(), $event->getMessage());
     }
 }

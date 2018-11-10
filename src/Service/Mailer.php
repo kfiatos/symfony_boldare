@@ -38,7 +38,7 @@ class Mailer implements MailerServiceInterface
         $from = 'test@test.com';
         $message = (new \Swift_Message('You Got Mail!'))
             ->setFrom($from)
-            ->setTo('our.own.real@email.address')
+            ->setTo($email)
             ->setBody(
                 'Some web sites were benchmarked',
                 'text/plain'
