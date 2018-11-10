@@ -6,7 +6,8 @@ interface MailerServiceInterface
 {
     /**
      * @param string $email
+     * @param string $content
      * @return void
      */
-    public function sendTo(string $email): void;
+    public function sendEmail(string $email, string $content): void;
 }

@@ -1,6 +1,8 @@
 <?php
 namespace App\Service;
 
+use App\Dto\BenchmarkResultDto;
+use App\Helpers\BenchmarkDataFormatters\BenchmarkResultsTextFileFormatter;
 use App\Service\Interfaces\LogWriterInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Filesystem\Exception\IOException;
@@ -66,5 +68,32 @@ class LogWriter implements LogWriterInterface
             return false;
         }
         return true;
+    }
+
+    /**
+     * @param BenchmarkResultDto $baseSiteTestResult
+     * @param array $comparedSitesTestsResults
+     * @param \DateTime $testDate
+     * @return mixed|void
+     */
+    public function writeBenchmarkResultsToFile(
+        BenchmarkResultDto $baseSiteTestResult,
+        array $comparedSitesTestsResults,
+        \DateTime $testDate
+    ) {
+        //hardcoded, should be set from outside
+        $filename = 'log.txt';
+        if ($this->createFile($filename)) {
+            $formattedBenchmarkResults = BenchmarkResultsTextFileFormatter::prepareResults(
+                $baseSiteTestResult,
+                $comparedSitesTestsResults,
+                $testDate
+            );
+
+            $this->appendContent($formattedBenchmarkResults);
+        } else {
+            throw new RuntimeException("{$filename} file could not be created");
+        }
+
     }
 }

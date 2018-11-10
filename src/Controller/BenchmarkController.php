@@ -2,15 +2,17 @@
 
 namespace App\Controller;
 
+use App\Commands\BenchmarkCommand;
 use App\Dto\SiteUrlsDto;
 use App\Helpers\BenchmarkDataFormatters\BenchmarkResultsTwigViewFormatter;
-use App\Service\Benchmark;
+use App\Service\BenchmarkQueryService;
+use League\Tactician\CommandBus;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 
 class BenchmarkController extends AbstractController
 {
-    public function benchmark(Request $request, Benchmark $benchmark)
+    public function benchmark(Request $request, CommandBus $commandBus, BenchmarkQueryService $benchmarkQueryService)
     {
         if($request->getMethod() !== Request::METHOD_POST) {
             return $this->render('benchmark/benchmark.html.twig');
@@ -19,25 +21,34 @@ class BenchmarkController extends AbstractController
         $baseSite = $request->get('base_site', '');
         $comparedSites = $request->get('compared_sites');
         $notificationEmailAddress = $request->get('email', '');
+        $notificationEmailAddress = filter_var($notificationEmailAddress, FILTER_SANITIZE_EMAIL);
+        $notificationEmailAddress = filter_var($notificationEmailAddress, FILTER_VALIDATE_EMAIL);
 
         list($baseSite, $isValidBaseSiteInput) = $this->validateBaseSiteInput($baseSite);
         list($comparedSites, $isValidComparedSitesInput) = $this->validateComparedSitesInput($comparedSites);
 
-        if (!$isValidBaseSiteInput || !$isValidComparedSitesInput) {
-            $this->addFlash('error', 'Both input fields has to be filled with proper www adresses');
+
+        if (!$isValidBaseSiteInput || !$isValidComparedSitesInput || $notificationEmailAddress === false) {
+            $this->addFlash('error', 'Both input fields has to be filled and email has to be valid');
             return $this->render('benchmark/benchmark.html.twig');
         }
 
-        $benchmarkedSitesDto = new SiteUrlsDto($baseSite, $comparedSites);
+        $benchmarkedSitesDto = new SiteUrlsDto($baseSite, $comparedSites, new \DateTime(''));
 
         //Hardcoded for the sake of simplicity (can be loaded from for ex: authenticated user)
         $mobileNumber = '123456789';
+        $benchmarkCommand = new BenchmarkCommand(
+            $benchmarkedSitesDto,
+            $notificationEmailAddress,
+            $mobileNumber
+        );
 
-        $benchmark->performSiteBenchmark($benchmarkedSitesDto);
-        $benchmark->sendNotificationsAfterBenchmarkWasDone($notificationEmailAddress, $mobileNumber);
+        $commandBus->handle($benchmarkCommand);
 
-        $benchmarkFormatter = new BenchmarkResultsTwigViewFormatter($benchmark->getData());
-        $results = $benchmarkFormatter->prepareResults();
+        $benchmarkResults =
+            $benchmarkQueryService->findBenchmarkResultsByBaseSiteAndDate($benchmarkedSitesDto->getBenchmarkDate());
+
+        $results = BenchmarkResultsTwigViewFormatter::prepareResults($benchmarkResults);
 
         return $this->render('benchmark/benchmark.html.twig', [
             'results' => $results

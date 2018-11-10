@@ -30,3 +30,20 @@ services:
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+    app.benchmark:
+        class: App\Service\Benchmark
+    App\Service\Benchmark: '@app.benchmark'
+
+
+    app.benchmark_handler:
+        class: App\Handlers\BenchmarkHandler
+        arguments:
+             - '@app.benchmark'
+             - '@app.benchmark.repository'
+             - '@event_dispatcher'
+        tags:
+            - { name: tactician.handler, typehints: true }
+
+    app.benchmark.repository:
+        class: App\Repository\BenchmarkResultRepository
+    App\Repository\BenchmarkResultRepository: '@app.benchmark.repository'
