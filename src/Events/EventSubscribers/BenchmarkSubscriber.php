@@ -52,20 +52,14 @@ class BenchmarkSubscriber implements EventSubscriberInterface
     public static function getSubscribedEvents()
     {
         return [
-            Events::SITE_LOADING_SPEED_TESTED_EVENT => [
-                [
-                    'handleSaveToLogTxtAfterEvent',
-                ]
+            Events::SITE_LOADING_SPEED_TESTED => [
+                ['handleSaveToLogTxtAfterEvent']
             ],
-            Events::SITE_LOADING_SPEED_TESTED_SENT_NOTIFICATION_EMAIL_EVENT => [
-                [
-                    'handleSendEmailNotificationAfterEvent'
-                ]
+            Events::SITE_LOADING_SPEED_TESTED_SENT_NOTIFICATION_EMAIL => [
+                ['handleSendEmailNotificationAfterEvent']
             ],
-            Events::SITE_LOADING_SPEED_TESTED_SENT_NOTIFICATION_SMS_EVENT => [
-                [
-                    'handleSendSmsNotificationAfterEvent'
-                ]
+            Events::SITE_LOADING_SPEED_TESTED_SENT_NOTIFICATION_SMS => [
+                ['handleSendSmsNotificationAfterEvent']
             ]
         ];
     }

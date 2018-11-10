@@ -218,7 +218,7 @@ class Benchmark
     protected function sendSiteLoadingSpeedTestedSentNotificationEmailEvent(string $email): void
     {
         $this->eventDispatcher->dispatch(
-            Events::SITE_LOADING_SPEED_TESTED_SENT_NOTIFICATION_EMAIL_EVENT,
+            Events::SITE_LOADING_SPEED_TESTED_SENT_NOTIFICATION_EMAIL,
             new SiteLoadingSpeedTestedSentNotificationEmailEvent(
                 $email
             )
@@ -228,7 +228,7 @@ class Benchmark
     protected function sendSiteLoadingSpeedTestedEvent(): void
     {
         $this->eventDispatcher->dispatch(
-        Events::SITE_LOADING_SPEED_TESTED_EVENT,
+        Events::SITE_LOADING_SPEED_TESTED,
             new SiteLoadingSpeedTestedEvent(
                 $this->getBaseSiteBenchmarkResult(),
                 $this->getOtherSitesBenchmarkResults(),
@@ -244,7 +244,7 @@ class Benchmark
     protected function sendSiteLoadingSpeedTestedSentNotificationSmsEvent(string $mobileNumber,string $message): void
     {
         $this->eventDispatcher->dispatch(
-        Events::SITE_LOADING_SPEED_TESTED_SENT_NOTIFICATION_SMS_EVENT,
+        Events::SITE_LOADING_SPEED_TESTED_SENT_NOTIFICATION_SMS,
             new SiteLoadingSpeedTestedSentNotificationSmsEvent(
                 $mobileNumber,
                 $message

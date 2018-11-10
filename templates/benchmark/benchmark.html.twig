@@ -31,12 +31,24 @@
                 {% endfor %}
             {% endfor %}
             <form action="{{ path('benchmark') }}" method="POST">
-                <input type="text" name="base_site" placeholder="Put base site url here" required>
-                <input type="text" name="compared_sites" placeholder="Site urls separated with | or ," required>
-                <input type="email" name="email" required>
+                <div class="form-group">
+                    <label for="baseSite">Base site adress</label>
+                    <input type="text" class="form-control" id="baseSite" name="base_site" placeholder="ex: http://google.pl" required>
+                </div>
+                <div class="form-group">
+                    <label for="comparedSites">List of sites to compare against</label>
+                    <input type="text" class="form-control" id="comparedSites" name="compared_sites" aria-describedby="comparedSitesHelp" placeholder="ex: http://google.pl, https://microsoft.com" required>
+                    <small id="comparedSitesHelp" class="form-text text-muted">Use ',' or '|' to separate addresses.</small>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email address to sent notification</label>
+                    <input type="email" class="form-control" id="email" name="email" aria-describedby="emailHelp" placeholder="ex: username@mail.com" required>
+                    <small id="emailHepl" class="form-text text-muted">We will keep this email a secret</small>
+                </div>
                 <input type="submit" value="Run test">
             </form>
         </section>
+        {% if results is defined and results is not empty %}
         <section>
             {% set baseSite = results['base_site'] %}
             <div class="base-site">Base site: {{ baseSite['url'] }} with loading time {{ baseSite['loading_time'] }} s</div>
@@ -48,6 +60,7 @@
                 </div>
             {% endfor %}
         </section>
+        {% endif %}
     </div>
 </div>
 {% endblock %}
