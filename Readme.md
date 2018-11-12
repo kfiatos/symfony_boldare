@@ -1,5 +1,5 @@
-<h3>Simple application for benchmarking of loading time one website compared agains multiple others websites<h3>
-Based on Symfony 4.1 and using CURL library as testing means <br>
+<h3>Simple application for benchmarking of loading time one website compared agains multiple others websites</h3>
+Based on Symfony 4.1 and using CURL library as testing means. <br>
 
 Properly configured app will send email notification if tested site is slower than any other competitor or an email and SMS if given site is twice as slow as any of the competitors.
 Test results are also stored in log.txt file, located in this application folder `var\log`
