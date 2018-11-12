@@ -7,9 +7,9 @@ Test results are also stored in log.txt file, located in this application folder
 No special requirements, different than regular Symfony 4.1 application. Just PHP 7.1 and Mysql database.
 
 Standard installation requires:
-+ clone repo:  <br>
++ clone repo:  `git clone https://github.com/kfiatos/symfony_boldare.git` <br>
 + copy `.env.dist` to `.env`  and update credentials to proper ones for Your setup
-```git clone https://github.com/kfiatos/symfony_boldare.git```
+
 + do `composer install`
 + create database `bin/console doctrine:database:create`
 + update schema `bin/console doctrine:schema:update --force`
