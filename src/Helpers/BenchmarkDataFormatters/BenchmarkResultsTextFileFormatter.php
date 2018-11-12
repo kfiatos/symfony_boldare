@@ -6,53 +6,33 @@ use App\Dto\BenchmarkResultDto;
 
 class BenchmarkResultsTextFileFormatter
 {
-    /**
-     * @var BenchmarkResultDto
-     */
-    protected $baseSiteBenchmarkResult;
+    use WhichSiteIsFaster;
 
     /**
-     * @var BenchmarkResultDto[]
-     */
-    protected $comparedSitesBenchmarkResults;
-
-    /**
-     * @var \DateTime
-     */
-    protected $benchmarkDate;
-
-    /**
-     * BenchmarkResultsTextFileFormatter constructor.
-     * @param BenchmarkResultDto $baseSiteBenchmarkResult
-     * @param array $comparedSitesBenchmarkResults
-     * @param \DateTime $benchmarkDate
-     */
-    public function __construct(
-        BenchmarkResultDto $baseSiteBenchmarkResult,
-        array $comparedSitesBenchmarkResults,
-        \DateTime $benchmarkDate
-    ) {
-        $this->baseSiteBenchmarkResult = $baseSiteBenchmarkResult;
-        $this->comparedSitesBenchmarkResults = $comparedSitesBenchmarkResults;
-        $this->benchmarkDate = $benchmarkDate;
-    }
-
-    /**
+     * @param BenchmarkResultDto $baseSiteTestResult
+     * @param BenchmarkResultDto[] $comparedSitesTestsResults
+     * @param \DateTime $testDate
      * @return string
      */
-    public function prepareResults(): string
+    public static function prepareResults(
+        BenchmarkResultDto $baseSiteTestResult,
+        array $comparedSitesTestsResults,
+        \DateTime $testDate
+    ): string
     {
-        $finalBaseSiteLoadTime = number_format($this->baseSiteBenchmarkResult->getSiteLoadingTime(), 3);
-        $firstRow = "Date : {$this->benchmarkDate->format('Y-m-d H:i:s')} | ";
-        $firstRow .= "Base comparison site: {$this->baseSiteBenchmarkResult->getSiteUrl()} loading time: {$finalBaseSiteLoadTime}\n";
+        $finalBaseSiteLoadTime = number_format($baseSiteTestResult->getSiteLoadingTime(), 3);
+        $firstRow = "Date : {$testDate->format('Y-m-d H:i:s')} | ";
+        $firstRow .= "Base comparison site: {$baseSiteTestResult->getSiteUrl()} loading time: {$finalBaseSiteLoadTime}\n";
 
         $rows = '';
-        foreach ($this->comparedSitesBenchmarkResults as $comparedSiteBenchmarkResult) {
+        foreach ($comparedSitesTestsResults as $comparedSiteBenchmarkResult) {
             $finalPageLoadTime = number_format($comparedSiteBenchmarkResult->getSiteLoadingTime(), 3);
             //Add some artificial formatting to text file
             $rows .= str_repeat(' ', 27);
+
+            $formatter = new self();
             list($fasterLoadingSite, $howMuchFaster) =
-                $this->whichSiteIsLoadingFaster($this->baseSiteBenchmarkResult, $comparedSiteBenchmarkResult);
+                $formatter->whichSiteIsLoadingFaster($baseSiteTestResult, $comparedSiteBenchmarkResult);
             $howMuchFaster = number_format($howMuchFaster, 3);
             $rows .= "Site: {$comparedSiteBenchmarkResult->getSiteUrl()} loading time: {$finalPageLoadTime} | ";
             $rows .= "Faster loading site is {$fasterLoadingSite->getSiteUrl()} by {$howMuchFaster}\n";

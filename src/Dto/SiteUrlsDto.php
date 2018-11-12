@@ -15,14 +15,21 @@ class SiteUrlsDto
     protected $comparedSites;
 
     /**
+     * @var \DateTime
+     */
+    protected $benchmarkDate;
+
+    /**
      * SiteUrlsDto constructor.
      * @param $baseSiteUrl
      * @param array $comparedSites
+     * @param \DateTime $benchmarkDate
      */
-    public function __construct(string $baseSiteUrl, array $comparedSites)
+    public function __construct(string $baseSiteUrl, array $comparedSites, \DateTime $benchmarkDate)
     {
         $this->baseSiteUrl = $baseSiteUrl;
         $this->comparedSites = $comparedSites;
+        $this->benchmarkDate = $benchmarkDate;
     }
 
     /**
@@ -42,4 +49,11 @@ class SiteUrlsDto
 
     }
 
+    /**
+     * @return \DateTime
+     */
+    public function getBenchmarkDate(): \DateTime
+    {
+        return $this->benchmarkDate;
+    }
 }

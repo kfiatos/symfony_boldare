@@ -38,10 +38,9 @@ class LogWriterTest extends WebTestCase
     public function testAppendContentToFile()
     {
         $this->testCreateFile();
-
     }
 
-    protected function tearDown()
+    public static function tearDownAfterClass()
     {
         $file = self::bootKernel()->getLogDir() . DIRECTORY_SEPARATOR . 'text.txt';
         $filesystem = new Filesystem();

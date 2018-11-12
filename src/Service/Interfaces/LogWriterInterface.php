@@ -2,6 +2,8 @@
 
 namespace App\Service\Interfaces;
 
+use App\Dto\BenchmarkResultDto;
+
 /**
  * Interface LogWriterInterface
  * @package App\Service\Interfaces
@@ -26,4 +28,16 @@ interface LogWriterInterface
      * @return bool
      */
     public function createFile(string $filename): bool;
+
+    /**
+     * @param BenchmarkResultDto $benchmarkResultDto
+     * @param array $comparedSitesTestResults
+     * @param \DateTime $testDate
+     * @return mixed
+     */
+    public function writeBenchmarkResultsToFile(
+        BenchmarkResultDto $benchmarkResultDto,
+        array $comparedSitesTestResults,
+        \DateTime $testDate
+    );
 }

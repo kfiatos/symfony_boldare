@@ -1,14 +1,9 @@
 <?php
-
 namespace App\Service;
 
 use App\Dto\BenchmarkFullResultsDto;
 use App\Dto\BenchmarkResultDto;
 use App\Dto\SiteUrlsDto;
-use App\Events\Events;
-use App\Events\SiteLoadingSpeedTestedEvent;
-use App\Events\SiteLoadingSpeedTestedSentNotificationEmailEvent;
-use App\Events\SiteLoadingSpeedTestedSentNotificationSmsEvent;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
@@ -17,10 +12,6 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
  */
 class Benchmark
 {
-    /**
-     * @var EventDispatcherInterface
-     */
-    protected $eventDispatcher;
 
     /**
      * @var BenchmarkResultDto
@@ -38,22 +29,13 @@ class Benchmark
     protected $benchmarkDate;
 
     /**
-     * Benchmark constructor.
-     * @param EventDispatcherInterface $eventDispatcher
-     */
-    public function __construct(EventDispatcherInterface $eventDispatcher)
-    {
-        $this->eventDispatcher = $eventDispatcher;
-    }
-
-    /**
      * @param SiteUrlsDto $siteUrlsDto
      * @return void
      */
     public function performSiteBenchmark(SiteUrlsDto $siteUrlsDto): void
     {
         // Not perfect time of execution but close enough in this case
-        $this->benchmarkDate = new \DateTime('now');
+        $this->benchmarkDate = $siteUrlsDto->getBenchmarkDate();
         $siteLoadingTime = $this->getWebsiteLoadingTime($siteUrlsDto->getBaseSiteUrl());
         $benchmarkResult = new BenchmarkResultDto($siteUrlsDto->getBaseSiteUrl(), $siteLoadingTime, $this->benchmarkDate);
         $this->setBaseSiteBenchmarkResult($benchmarkResult);
@@ -64,38 +46,6 @@ class Benchmark
             $this->addOtherSiteBenchmarkResult($benchmarkResult);
         }
         $this->sortBenchmarkResultsByLoadingTime($this->otherSitesBenchmarkResults);
-    }
-
-    /**
-     * @param string $email
-     * @param string $mobileNumber
-     * @throws \Exception
-     */
-    public function sendNotificationsAfterBenchmarkWasDone(string $email, string $mobileNumber)
-    {
-        if (empty($this->baseSiteBenchmarkResult) || empty($this->otherSitesBenchmarkResults)) {
-            throw new \Exception('In order to send notifications, `performSiteBenchmark method has to be run first`');
-        }
-        //chceck if sms sending is nescessary
-        $shouldSmsNotificationBeSent = $this->shouldSmsNotificationBeSent(
-            $this->getBaseSiteBenchmarkResult(),
-            $this->getOtherSitesBenchmarkResults()
-        );
-
-        //Check if email sending is nescessary
-        $shouldEmailNotificationBeSent = $this->shouldEmailNotificationBeSent(
-            $this->getBaseSiteBenchmarkResult(),
-            $this->getOtherSitesBenchmarkResults()
-        );
-
-        //send events for sms, email, and saving results to log.txt
-
-        $shouldEmailNotificationBeSent !== false && $this->sendSiteLoadingSpeedTestedSentNotificationEmailEvent($email);
-
-        $shouldSmsNotificationBeSent !== false && $this->sendSiteLoadingSpeedTestedSentNotificationSmsEvent(
-            $mobileNumber, 'some message'
-        );
-        $this->sendSiteLoadingSpeedTestedEvent();
     }
 
     /**
@@ -213,42 +163,28 @@ class Benchmark
     }
 
     /**
-     * @param string $email
+     * @return bool
      */
-    protected function sendSiteLoadingSpeedTestedSentNotificationEmailEvent(string $email): void
+    public function shouldSmsBeSent(): bool
     {
-        $this->eventDispatcher->dispatch(
-            Events::SITE_LOADING_SPEED_TESTED_SENT_NOTIFICATION_EMAIL,
-            new SiteLoadingSpeedTestedSentNotificationEmailEvent(
-                $email
-            )
+        //check if sms sending is nescessary
+        $shouldSmsNotificationBeSent = $this->shouldSmsNotificationBeSent(
+            $this->getBaseSiteBenchmarkResult(),
+            $this->getOtherSitesBenchmarkResults()
         );
-    }
-
-    protected function sendSiteLoadingSpeedTestedEvent(): void
-    {
-        $this->eventDispatcher->dispatch(
-        Events::SITE_LOADING_SPEED_TESTED,
-            new SiteLoadingSpeedTestedEvent(
-                $this->getBaseSiteBenchmarkResult(),
-                $this->getOtherSitesBenchmarkResults(),
-                $this->getBenchmarkDate()
-            )
-        );
+        return $shouldSmsNotificationBeSent;
     }
 
     /**
-     * @param string $mobileNumber
-     * @param string $message
+     * @return bool
      */
-    protected function sendSiteLoadingSpeedTestedSentNotificationSmsEvent(string $mobileNumber,string $message): void
+    public function shouldEmailBeSent(): bool
     {
-        $this->eventDispatcher->dispatch(
-        Events::SITE_LOADING_SPEED_TESTED_SENT_NOTIFICATION_SMS,
-            new SiteLoadingSpeedTestedSentNotificationSmsEvent(
-                $mobileNumber,
-                $message
-            )
+        //Check if email sending is nescessary
+        $shouldEmailNotificationBeSent = $this->shouldEmailNotificationBeSent(
+            $this->getBaseSiteBenchmarkResult(),
+            $this->getOtherSitesBenchmarkResults()
         );
+        return $shouldEmailNotificationBeSent;
     }
 }

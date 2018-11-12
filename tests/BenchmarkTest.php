@@ -24,7 +24,8 @@ class BenchmarkTest extends TestCase
         $this->benchmark = new Benchmark($dipatcherInterfaceMock);
         $siteUrlsDto = new SiteUrlsDto(
             'http://google.pl',
-            ['http://microsoft.com', 'http://wp.pl']
+            ['http://microsoft.com', 'http://wp.pl'],
+            new \DateTime()
         );
         $this->benchmark->performSiteBenchmark($siteUrlsDto);
     }
@@ -33,7 +34,8 @@ class BenchmarkTest extends TestCase
     {
         $siteUrlsDto = new SiteUrlsDto(
             'http://google.pl',
-            ['http://microsoft.com', 'http://wp.pl']
+            ['http://microsoft.com', 'http://wp.pl'],
+            new \DateTime()
         );
         $this->benchmark->performSiteBenchmark($siteUrlsDto);
 

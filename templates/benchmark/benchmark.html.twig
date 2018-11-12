@@ -56,7 +56,7 @@
             {% for comparedSite in results['compared_sites'] %}
                 <div>
                     Site: {{ comparedSite['url'] }} with loading time <strong>{{ comparedSite['loading_time'] }}</strong> >>> Faster loading site is
-                    <em>{{ comparedSite['faster_site'].getSiteUrl() }}</em> by <strong>{{ comparedSite['how_much_faster'] }} s</strong>
+                    <em>{{ comparedSite['faster_site'].getUrl() }}</em> by <strong>{{ comparedSite['how_much_faster'] }} s</strong>
                 </div>
             {% endfor %}
         </section>

@@ -6,10 +6,9 @@ use App\Events\Events;
 use App\Events\SiteLoadingSpeedTestedEvent;
 use App\Events\SiteLoadingSpeedTestedSentNotificationEmailEvent;
 use App\Events\SiteLoadingSpeedTestedSentNotificationSmsEvent;
-use App\Helpers\BenchmarkDataFormatters\BenchmarkResultsTextFileFormatter;
 use App\Service\Interfaces\LogWriterInterface;
-use App\Service\Interfaces\MailerServiceInterface;
-use App\Service\Interfaces\SmsSenderInterface;
+use App\Service\Interfaces\NotificationServiceInterface;
+use App\Service\Notification;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
@@ -24,29 +23,21 @@ class BenchmarkSubscriber implements EventSubscriberInterface
     protected $logWriter;
 
     /**
-     * @var MailerServiceInterface
+     * @var Notification
      */
-    protected $mailer;
-
-    /**
-     * @var SmsSenderInterface
-     */
-    protected $smsService;
+    protected $notificationService;
 
     /**
      * BenchmarkSubscriber constructor.
      * @param LogWriterInterface $logWriter
-     * @param MailerServiceInterface $mailer
-     * @param SmsSenderInterface $smsService
+     * @param NotificationServiceInterface $notificationService
      */
     public function __construct(
         LogWriterInterface $logWriter,
-        MailerServiceInterface $mailer,
-        SmsSenderInterface $smsService
+        NotificationServiceInterface $notificationService
     ) {
         $this->logWriter = $logWriter;
-        $this->mailer = $mailer;
-        $this->smsService = $smsService;
+        $this->notificationService = $notificationService;
     }
 
     public static function getSubscribedEvents()
@@ -69,20 +60,11 @@ class BenchmarkSubscriber implements EventSubscriberInterface
      */
     public function handleSaveToLogTxtAfterEvent(SiteLoadingSpeedTestedEvent $event)
     {
-        //Create text file log.txt if it does not exits and append content (hardcoded for now, can be later easily changed)
-        $filename = 'log.txt';
-        if ($this->logWriter->createFile($filename)) {
-            $benchmarkFormatter = new BenchmarkResultsTextFileFormatter(
+        $this->logWriter->writeBenchmarkResultsToFile(
                 $event->getBaseSiteTestResult(),
                 $event->getComparedSitesTestResults(),
                 $event->getBenchmarkDate()
             );
-            $formattedBenchmarkResults = $benchmarkFormatter->prepareResults();
-
-            $this->logWriter->appendContent($formattedBenchmarkResults);
-        } else {
-            throw new RuntimeException("{$filename} file could not be created");
-        }
     }
 
     /**
@@ -90,7 +72,7 @@ class BenchmarkSubscriber implements EventSubscriberInterface
      */
     public function handleSendEmailNotificationAfterEvent(SiteLoadingSpeedTestedSentNotificationEmailEvent $event)
     {
-        $this->mailer->sendTo($event->getEmail());
+        $this->notificationService->sendEmail($event->getEmail(), 'You made some benchmarks');
     }
 
     /**
@@ -98,6 +80,6 @@ class BenchmarkSubscriber implements EventSubscriberInterface
      */
     public function handleSendSmsNotificationAfterEvent(SiteLoadingSpeedTestedSentNotificationSmsEvent $event)
     {
-        $this->smsService->sendSms($event->getMobileNumber(), $event->getMessage());
+        $this->notificationService->sendSms($event->getMobileNumber(), 'Sms because you made some benchmarks');
     }
 }

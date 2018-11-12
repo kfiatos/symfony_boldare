@@ -11,19 +11,12 @@ class SiteLoadingSpeedTestedSentNotificationSmsEvent extends Event
     protected $mobileNumber;
 
     /**
-     * @var string
-     */
-    protected $message;
-
-    /**
      * SiteLoadingSpeedTestedSentNotificationSmsEvent constructor.
      * @param string $mobileNumber
-     * @param string $message
      */
-    public function __construct(string $mobileNumber, string $message)
+    public function __construct(string $mobileNumber)
     {
         $this->mobileNumber = $mobileNumber;
-        $this->message = $message;
     }
 
     /**
@@ -32,13 +25,5 @@ class SiteLoadingSpeedTestedSentNotificationSmsEvent extends Event
     public function getMobileNumber(): string
     {
         return $this->mobileNumber;
-    }
-
-    /**
-     * @return string
-     */
-    public function getMessage(): string
-    {
-        return $this->message;
     }
 }

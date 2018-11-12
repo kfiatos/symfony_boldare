@@ -1,22 +1,22 @@
 <?php
 namespace App\Helpers\BenchmarkDataFormatters;
 
-use App\Dto\BenchmarkResultDto;
+use App\Entity\Interfaces\BenchmarkResultInterface;
 
 trait WhichSiteIsFaster
 {
     /**
-     * @param BenchmarkResultDto $site1
-     * @param BenchmarkResultDto $site2
+     * @param BenchmarkResultInterface $site1
+     * @param BenchmarkResultInterface $site2
      * @return array
      */
-    protected function whichSiteIsLoadingFaster(BenchmarkResultDto $site1, BenchmarkResultDto $site2) {
-        if ($site1->getSiteLoadingTime() > $site2->getSiteLoadingTime()) {
+    protected function whichSiteIsLoadingFaster(BenchmarkResultInterface $site1, BenchmarkResultInterface $site2) {
+        if ($site1->getLoadingTime() > $site2->getLoadingTime()) {
             $site =  $site2;
         } else {
             $site = $site1;
         }
-        $howMuchFasterLoading = abs($site1->getSiteLoadingTime() - $site2->getSiteLoadingTime());
+        $howMuchFasterLoading = abs($site1->getLoadingTime() - $site2->getLoadingTime());
 
         return [
             $site,

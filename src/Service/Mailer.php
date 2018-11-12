@@ -31,12 +31,13 @@ class Mailer implements MailerServiceInterface
 
     /**
      * @param string $email
+     * @param string $content
      */
-    public function sendTo(string $email): void
+    public function sendEmail(string $email, string $content): void
     {
         // This value should be injected from outside, config maybe
         $from = 'test@test.com';
-        $message = (new \Swift_Message('You Got Mail!'))
+        $message = (new \Swift_Message($content))
             ->setFrom($from)
             ->setTo($email)
             ->setBody(

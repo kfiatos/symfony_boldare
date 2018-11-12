@@ -6,6 +6,7 @@
         "ext-ctype": "*",
         "ext-curl": "*",
         "ext-iconv": "*",
+        "league/tactician-bundle": "^1.1",
         "sensio/framework-extra-bundle": "^5.1",
         "smsapi/php-client": "^2.0",
         "squizlabs/php_codesniffer": "^3.3",
